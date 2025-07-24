@@ -1,0 +1,54 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Virtual environment
+.venv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Pipenv
+Pipfile.lock
+
+# Pytest cache
+.pytest_cache/
+.coverage
+
+# mypy
+.mypy_cache/
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+
+# IDE/editor files
+.vscode/
+.idea/
+*.swp
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+MANIFEST
+
+# AWS Lambda build artifacts (if used)
+package.zip
+lambda.zip
+
+# Environment variables
+.env
+.env.*
+
+# Mac OS metadata
+.DS_Store

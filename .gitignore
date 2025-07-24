@@ -1,0 +1,33 @@
+# Python
+*.pyc
+__pycache__/
+.venv/
+backend/.venv/
+
+# Node/React
+node_modules/
+frontend/node_modules/
+dist/
+build/
+frontend/dist/
+
+# OS/editor
+.DS_Store
+.vscode/
+*.swp
+
+# Terraform
+.terraform/
+terraform.tfstate*
+infra/.terraform/
+infra/terraform.tfstate*
+
+# Local environment/secrets
+.env
+.env.*
+backend/.env
+frontend/.env
+
+# Build artifacts
+*.zip
+backend/package/
