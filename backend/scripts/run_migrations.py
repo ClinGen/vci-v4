@@ -3,7 +3,7 @@ import psycopg2
 
 DB_HOST = os.environ.get("DB_HOST", "localhost")
 DB_PORT = os.environ.get("DB_PORT", 5432)
-DB_NAME = os.environ.get("DB_NAME", "variants")
+DB_NAME = os.environ.get("DB_NAME", "vci")
 DB_USER = os.environ.get("DB_USER", "vciv4")
 DB_PASSWORD = os.environ.get("DB_PASSWORD", "vci4password")
 
