@@ -1,0 +1,12 @@
+{
+  "Parameters": {
+    "DBHost": "host.docker.internal",
+    "DBPort": "5432",
+    "DBName": "vci",
+    "DBUser": "vciv4",
+    "DBPassword": "vci4password",
+    "ClinVarApiBase": "https://api.ncbi.nlm.nih.gov/clinvar/v1/",
+    "AlleleRegistryApiBase": "https://reg.clinicalgenome.org/alleles/",
+    "HttpTimeoutSeconds": "10"
+  }
+}
