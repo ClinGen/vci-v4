@@ -6,10 +6,10 @@ import { OtherResources } from "./tables/OtherResources";
 import { GenomicContext } from "./tables/GenomicContext";
 import { Button } from "../../ui/Button";
 
-const ExternalDatabases = () => {
+const GeneralInformation = () => {
   return (
     <div className="space-y-6">
-      <h3 className="text-2xl font-bold tracking-tight">External Databases</h3>
+      <h3 className="text-2xl font-bold tracking-tight">General Information</h3>
       <AllInterpretations />
       <ClinvarClassification />
       <GermlineClassifications />
@@ -38,4 +38,4 @@ const ExternalDatabases = () => {
   );
 }
 
-export default ExternalDatabases;
+export default GeneralInformation;

@@ -2,7 +2,7 @@ import { Check } from "lucide-react";
 import { useTabContext } from "../../contexts/useTabContext";
 
 const navItems = [
-  { id: "external-databases", label: "External Databases" },
+  { id: "general-information", label: "General Information" },
   {
     id: "population",
     label: "Population",

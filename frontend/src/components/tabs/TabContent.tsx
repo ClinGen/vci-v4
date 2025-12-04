@@ -1,5 +1,5 @@
 import { useTabContext } from "../../contexts/useTabContext";
-import ExternalDatabases from "./external-database/ExternalDatabases";
+import GeneralInformation from "./external-database/GeneralInformation";
 import Population from "./population/Population";
 import Clinical from "./clinical/Clinical";
 import PredictedEffect from "./predicted-effect/PredictedEffect";
@@ -14,8 +14,8 @@ const TabContent = () => {
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case "external-databases":
-        return <ExternalDatabases />
+      case "general-information":
+        return <GeneralInformation />
       case "population":
         return <Population />
       case "clinical":
