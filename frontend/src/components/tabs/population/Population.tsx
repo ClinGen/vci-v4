@@ -1,10 +1,21 @@
 import { Button } from "../../ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/Card";
+import { RefreshCw } from "lucide-react";
 
 const Population = () => {
   return (
     <div className="space-y-6">
-      <h3 className="text-2xl font-bold tracking-tight">Population</h3>
+      <div className="flex items-start justify-between gap-3">
+        <h3 className="text-2xl font-bold tracking-tight">Population</h3>
+        <Button
+          variant="outline"
+          className="shrink-0 flex items-center gap-2 border-blue-200 text-blue-600 hover:bg-blue-50 bg-transparent"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Requery Population Databases
+          <span className="hidden lg:inline text-xs text-gray-500">Last queried: September 4, 2025</span>
+        </Button>
+      </div>
       <Card className="bg-white shadow-md">
         <CardHeader className="pb-4">
           <CardTitle className="text-2xl font-bold text-blue-700">
@@ -360,23 +371,6 @@ const Population = () => {
           </div>
         </CardContent>
       </Card>
-      <div className="flex justify-center pt-4">
-        <Button
-          variant="outline"
-          className="flex items-center gap-2 text-blue-600 border-blue-200 hover:bg-blue-50 bg-transparent text-lg"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-            />
-          </svg>
-          Requery gnomAD
-          <span className="text-base text-gray-500 ml-2">Last queried: September 4, 2025</span>
-        </Button>
-      </div>
     </div>
   );
 }

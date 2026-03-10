@@ -1,5 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/Card";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, RefreshCw } from "lucide-react";
+import { Button } from "../../ui/Button";
 
 const inSilicoPredictors = [
   {
@@ -64,8 +65,20 @@ const InSilicoPredictors = () => {
   return (
     <Card className="bg-white shadow-md">
       <CardHeader className="pb-2">
-        <CardTitle className="font-bold">In silico predictors</CardTitle>
-        <CardDescription>Computational predictions of variant effect</CardDescription>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <CardTitle className="font-bold">In silico predictors</CardTitle>
+            <CardDescription>Computational predictions of variant effect</CardDescription>
+          </div>
+          <Button
+            variant="outline"
+            className="shrink-0 flex items-center gap-2 border-blue-200 text-blue-600 hover:bg-blue-50 bg-transparent"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Requery In Silico Databases
+            <span className="hidden lg:inline text-xs text-gray-500">Last queried: September 1, 2025</span>
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="bg-orange-50 border border-orange-200 p-3 mb-4 text-orange-800 text-sm">
