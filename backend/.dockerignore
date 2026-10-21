@@ -1,0 +1,10 @@
+.env
+.env.*
+sam-env.json
+.venv/
+.aws-sam/
+.pytest_cache/
+tests/
+pytest.ini
+__pycache__/
+**/__pycache__/

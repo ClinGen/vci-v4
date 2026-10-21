@@ -1,0 +1,37 @@
+# Local development only. These credentials are for a throwaway database on your machine.
+name: vci-v4
+
+services:
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: vci
+      POSTGRES_USER: vci
+      POSTGRES_PASSWORD: vci-local-only
+    ports:
+      - "5433:5432" # 5432 is used by the older infra/docker-compose.yml database
+    volumes:
+      - db_data:/var/lib/postgresql # Postgres 18+ images store data here, not in .../data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vci -d vci"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  api:
+    build:
+      context: ./backend
+      target: dev
+    environment:
+      DATABASE_URL: postgresql+psycopg://vci:vci-local-only@db:5432/vci
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db_data:

@@ -31,3 +31,4 @@ frontend/.env
 # Build artifacts
 *.zip
 backend/package/
+backend/.aws-sam/
