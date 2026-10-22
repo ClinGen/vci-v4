@@ -1,1 +1,5 @@
 @import "tailwindcss";
+
+html {
+  font-size: 93.75%; /* 16px -> 15px, matching prototype */
+}

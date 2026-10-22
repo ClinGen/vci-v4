@@ -1,124 +1,100 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/Card";
-import { ExternalLink, RefreshCw } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "../../ui/Card";
+import { Table, THead, TBody, TR, TH, TD } from "../../ui/Table";
+import { Badge } from "../../ui/Badge";
+import { ExtIcon } from "../../ui/ExtIcon";
 import { Button } from "../../ui/Button";
+import { RefreshCw } from "lucide-react";
 
 const inSilicoPredictors = [
-  {
-    tool: "REVEL",
-    score: "0.368",
-    prediction: "Benign",
-    scoreRange: "0-1 (higher = more path)",
-    transcript: "NM_000546.6",
-    maneSelect: true,
-  },
-  {
-    tool: "VEST4",
-    score: "0.083",
-    prediction: "Benign",
-    scoreRange: "0-1 (higher = more path)",
-    transcript: "ENST00000445888.6",
-    maneSelect: true,
-  },
-  {
-    tool: "BayesDel",
-    score: "-0.333827",
-    prediction: "Benign",
-    scoreRange: "1.29334-0.75731 (higher = more path)",
-    transcript: "Not known",
-    maneSelect: false,
-  },
-  {
-    tool: "AlphaMissense",
-    score: "0.89",
-    prediction: "Tolerated",
-    scoreRange: "0-1 (≥0.05: tolerated)",
-    transcript: "NM_000546.6",
-    maneSelect: true,
-  },
-  {
-    tool: "ESM1b",
-    score: "0.012",
-    prediction: "Benign",
-    scoreRange: "0-1 (≥0.15: benign)",
-    transcript: "ENST00000445888.6",
-    maneSelect: true,
-  },
-  {
-    tool: "MutationTaster",
-    score: "1.2",
-    prediction: "Below threshold",
-    scoreRange: "1-99 (≥20: damaging)",
-    transcript: "Not known",
-    maneSelect: false,
-  },
-  {
-    tool: "PROVEAN",
-    score: "-2.41",
-    prediction: "Not conserved",
-    scoreRange: "-12.3-6.17 (≥2: conserved)",
-    transcript: "NM_000546.6",
-    maneSelect: true,
-  },
+  { tool: "REVEL", score: "0.368", prediction: "Benign", scoreRange: "0 to 1 (higher = more likely damaging)", transcript: "NM_000546.6", maneSelect: true },
+  { tool: "VEST4", score: "0.083", prediction: "Benign", scoreRange: "0 to 1 (higher = more likely damaging)", transcript: "ENST00000445888.6", maneSelect: true },
+  { tool: "BayesDel", score: "-0.333827", prediction: "Benign", scoreRange: "-1.29334 to 0.75731 (higher = more likely damaging)", transcript: "Not known", maneSelect: false },
+  { tool: "AlphaMissense", score: "0.89", prediction: "Tolerated", scoreRange: "0 to 1 (higher = more likely damaging)", transcript: "NM_000546.6", maneSelect: true },
+  { tool: "ESM1b", score: "0.012", prediction: "Benign", scoreRange: "-24.358 to 6.937 (lower = more likely damaging)", transcript: "ENST00000445888.6", maneSelect: true },
+  { tool: "MutPred2", score: "—", prediction: "—", scoreRange: "0 to 1 (higher = more likely damaging)", transcript: "—", maneSelect: false },
+  { tool: "VARITY_R", score: "—", prediction: "—", scoreRange: "0 to 1 (higher = more likely damaging)", transcript: "—", maneSelect: false },
+];
+
+const otherPredictors = [
+  { tool: "MutationTaster", score: "1.2", scoreRange: "0 to 1 (probability of the prediction being correct)" },
+  { tool: "PROVEAN", score: "-2.41", scoreRange: "-14 to 14 (lower = more likely damaging)" },
+  { tool: "CADD", score: "—", scoreRange: "-7.535 to 35.789 (higher = more likely damaging)" },
+  { tool: "SIFT", score: "—", scoreRange: "0 to 1 (lower = more likely damaging)" },
 ];
 
 const InSilicoPredictors = () => {
   return (
-    <Card className="bg-white shadow-md">
-      <CardHeader className="pb-2">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <CardTitle className="font-bold">In silico predictors</CardTitle>
-            <CardDescription>Computational predictions of variant effect</CardDescription>
-          </div>
-          <Button
-            variant="outline"
-            className="shrink-0 flex items-center gap-2 border-blue-200 text-blue-600 hover:bg-blue-50 bg-transparent"
-          >
-            <RefreshCw className="h-4 w-4" />
-            Requery In Silico Databases
-            <span className="hidden lg:inline text-xs text-gray-500">Last queried: September 1, 2025</span>
+    <Card tone="reference">
+      <CardHeader>
+        <div className="flex items-center justify-between gap-3">
+          <CardTitle>In Silico Predictors</CardTitle>
+          <Button variant="outline" size="sm" className="gap-2 flex-none">
+            <RefreshCw className="h-3.5 w-3.5" /> Requery Predictors
           </Button>
         </div>
       </CardHeader>
       <CardContent>
-        <div className="bg-orange-50 border border-orange-200 p-3 mb-4 text-orange-800 text-sm">
-          This section for demonstration only, specific display to be further specified
-        </div>
-        <div className="overflow-x-auto w-full">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="bg-gray-50 border-y">
-                <th className="text-left p-3 text-gray-600 font-bold tracking-tight">Tool</th>
-                <th className="text-left p-3 text-gray-600 font-bold tracking-tight">Score</th>
-                <th className="text-left p-3 text-gray-600 font-bold tracking-tight">Prediction</th>
-                <th className="text-left p-3 text-gray-600 font-bold tracking-tight">Score Range</th>
-                <th className="text-left p-3 text-gray-600 font-bold tracking-tight">Transcript</th>
-              </tr>
-            </thead>
-            <tbody>
-              {inSilicoPredictors.map((predictor, index) => (
-                <tr key={index} className={`border-b hover:bg-gray-50 ${index % 2 === 0 ? "bg-white" : "bg-gray-50"}`}>
-                  <td className="p-3">
-                    <a href="#" className="text-blue-600 hover:underline flex items-center">
-                      {predictor.tool}
-                      <ExternalLink className="h-3 w-3 ml-1" />
-                    </a>
-                  </td>
-                  <td className="p-3 font-mono">{predictor.score}</td>
-                  <td className="p-3">{predictor.prediction}</td>
-                  <td className="p-3">{predictor.scoreRange}</td>
-                  <td className="p-3">
-                    {predictor.transcript}
-                    {predictor.maneSelect && predictor.transcript !== "Not known" && (
-                      <span className="ml-2 px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs rounded">
-                        MANE Select
-                      </span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="space-y-4">
+          <div>
+            <div className="text-xs font-semibold text-gray-700 mb-2">ClinGen-Recommended Predictors (7)</div>
+            <div className="overflow-x-auto">
+              <Table>
+                <THead>
+                  <TR className="bg-gray-50">
+                    <TH>Tool</TH>
+                    <TH className="text-center">Score</TH>
+                    <TH className="text-center">Points</TH>
+                    <TH>Score Range</TH>
+                    <TH>Transcript</TH>
+                  </TR>
+                </THead>
+                <TBody>
+                  {inSilicoPredictors.map((p) => (
+                    <TR key={p.tool} className="border-t">
+                      <TD className="font-medium text-gray-800">{p.tool}</TD>
+                      <TD className="text-center font-mono text-xs">{p.score}</TD>
+                      <TD className="text-center font-mono text-xs text-gray-500">—</TD>
+                      <TD className="text-xs text-gray-600">{p.scoreRange}</TD>
+                      <TD>
+                        <span className="font-mono text-xs">{p.transcript}</span>
+                        {p.maneSelect && p.transcript !== "Not known" && p.transcript !== "—" && (
+                          <Badge className="ml-1.5 bg-yellow-100 text-yellow-800">MANE Select</Badge>
+                        )}
+                      </TD>
+                    </TR>
+                  ))}
+                </TBody>
+              </Table>
+            </div>
+          </div>
+
+          <div>
+            <div className="text-xs font-semibold text-gray-700 mb-2">Other Predictors</div>
+            <div className="overflow-x-auto">
+              <Table>
+                <THead>
+                  <TR className="bg-gray-50">
+                    <TH>Tool</TH>
+                    <TH className="text-center">Score</TH>
+                    <TH>Score Range</TH>
+                  </TR>
+                </THead>
+                <TBody>
+                  {otherPredictors.map((p) => (
+                    <TR key={p.tool} className="border-t">
+                      <TD className="font-medium text-gray-800">{p.tool}</TD>
+                      <TD className="text-center font-mono text-xs">{p.score}</TD>
+                      <TD className="text-xs text-gray-600">{p.scoreRange}</TD>
+                    </TR>
+                  ))}
+                </TBody>
+              </Table>
+            </div>
+          </div>
+
+          <p className="text-xs text-gray-500">
+            Scores sourced from ClinGen LDH and dbNSFP. Point values are computed during scoring (Predicted Effect tab).
+          </p>
         </div>
       </CardContent>
     </Card>

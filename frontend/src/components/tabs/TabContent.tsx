@@ -4,6 +4,7 @@ import Population from "./population/Population";
 import Clinical from "./clinical/Clinical";
 import PredictedEffect from "./predicted-effect/PredictedEffect";
 import Functional from "./functional/Functional";
+import InformativeVariants from "./informative-variants/InformativeVariants";
 import Gene from "./gene/Gene";
 import Summary from "./summary/Summary";
 import AuditTrail from "./audit-trail/AuditTrail";
@@ -24,6 +25,8 @@ const TabContent = () => {
         return <PredictedEffect />
       case "functional":
         return <Functional />
+      case "informative-variants":
+        return <InformativeVariants />
       case "gene":
         return <Gene />
       case "summary":

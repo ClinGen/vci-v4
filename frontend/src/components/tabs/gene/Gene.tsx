@@ -1,17 +1,14 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/Card";
+import { Card, CardHeader, CardTitle, CardContent } from "../../ui/Card"
 
-const Gene = () => {
+export default function Gene() {
   return (
-    <Card className="bg-white shadow-md">
+    <Card tone="reference">
       <CardHeader>
-        <CardTitle className="font-bold">Gene and Disease Information</CardTitle>
-        <CardDescription>Information about the gene and related diseases</CardDescription>
+        <CardTitle>Gene Overview</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="flex items-center justify-center p-8 text-gray-500">No content available</div>
+        <p className="text-xs text-gray-500 italic">Data not part of this prototype.</p>
       </CardContent>
     </Card>
-  );
+  )
 }
-
-export default Gene;

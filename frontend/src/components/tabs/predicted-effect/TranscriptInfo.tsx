@@ -1,4 +1,5 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/Card";
+import { Card, CardContent, CardHeader, CardTitle } from "../../ui/Card";
+import { Table, THead, TBody, TR, TH, TD } from "../../ui/Table";
 
 const refSeqTranscripts = [
   {
@@ -36,88 +37,81 @@ const ensemblTranscripts = [
 
 const TranscriptInfo = () => {
   return (
-    <Card className="bg-white shadow-md">
-      <CardHeader className="pb-2">
-        <CardTitle className="font-bold">Transcript Information</CardTitle>
-        <CardDescription>RefSeq and Ensembl transcript details for this variant</CardDescription>
+    <Card tone="reference">
+      <CardHeader>
+        <CardTitle>Transcript Information</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4">
         {/* RefSeq Transcripts */}
         <div>
-          <h3 className="text-lg font-bold mb-3">RefSeq Transcripts</h3>
-          <div className="overflow-x-auto w-full">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-gray-50 border-y">
-                  <th className="text-left p-3 text-gray-600 font-bold tracking-tight">Nucleotide Change</th>
-                  <th className="text-left p-3 text-gray-600 font-bold tracking-tight">Exon</th>
-                  <th className="text-left p-3 text-gray-600 font-bold tracking-tight">Protein Change</th>
-                  <th className="text-left p-3 text-gray-600 font-bold tracking-tight">Molecular Consequence</th>
-                </tr>
-              </thead>
-              <tbody>
+          <div className="text-xs font-semibold text-gray-700 mb-2">RefSeq Transcripts</div>
+          <div className="overflow-x-auto">
+            <Table>
+              <THead>
+                <TR className="bg-gray-50">
+                  <TH>Nucleotide Change</TH>
+                  <TH>Exon</TH>
+                  <TH>Protein Change</TH>
+                  <TH>Molecular Consequence</TH>
+                </TR>
+              </THead>
+              <TBody>
                 {refSeqTranscripts.map((transcript, index) => (
-                  <tr
-                    key={index}
-                    className={`border-b hover:bg-gray-50 ${index % 2 === 0 ? "bg-white" : "bg-gray-50"}`}
-                  >
-                    <td className="p-3 font-mono">
+                  <TR key={index} className={`border-t hover:bg-gray-50 ${index % 2 === 0 ? "bg-white" : "bg-gray-50/50"}`}>
+                    <TD className="font-mono text-xs">
                       {transcript.nucleotideChange}
                       {transcript.maneSelect && (
-                        <span className="ml-2 px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs rounded">
+                        <span className="ml-1.5 px-1.5 py-0.5 bg-yellow-100 text-yellow-800 text-[10px] rounded">
                           MANE Select
                         </span>
                       )}
-                    </td>
-                    <td className="p-3">{transcript.exon}</td>
-                    <td className="p-3">{transcript.proteinChange}</td>
-                    <td className="p-3">{transcript.molecularConsequence}</td>
-                  </tr>
+                    </TD>
+                    <TD className="text-xs">{transcript.exon}</TD>
+                    <TD className="text-xs">{transcript.proteinChange}</TD>
+                    <TD className="text-xs">{transcript.molecularConsequence}</TD>
+                  </TR>
                 ))}
-              </tbody>
-            </table>
+              </TBody>
+            </Table>
           </div>
         </div>
 
         {/* Ensembl Transcripts */}
         <div>
-          <h3 className="text-lg font-bold mb-3">Ensembl Transcripts</h3>
-          <div className="overflow-x-auto w-full">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-gray-50 border-y">
-                  <th className="text-left p-3 text-gray-600 font-bold tracking-tight">Nucleotide Change</th>
-                  <th className="text-left p-3 text-gray-600 font-bold tracking-tight">Exon</th>
-                  <th className="text-left p-3 text-gray-600 font-bold tracking-tight">Protein Change</th>
-                  <th className="text-left p-3 text-gray-600 font-bold tracking-tight">Molecular Consequence</th>
-                </tr>
-              </thead>
-              <tbody>
+          <div className="text-xs font-semibold text-gray-700 mb-2">Ensembl Transcripts</div>
+          <div className="overflow-x-auto">
+            <Table>
+              <THead>
+                <TR className="bg-gray-50">
+                  <TH>Nucleotide Change</TH>
+                  <TH>Exon</TH>
+                  <TH>Protein Change</TH>
+                  <TH>Molecular Consequence</TH>
+                </TR>
+              </THead>
+              <TBody>
                 {ensemblTranscripts.map((transcript, index) => (
-                  <tr
-                    key={index}
-                    className={`border-b hover:bg-gray-50 ${index % 2 === 0 ? "bg-white" : "bg-gray-50"}`}
-                  >
-                    <td className="p-3 font-mono">
+                  <TR key={index} className={`border-t hover:bg-gray-50 ${index % 2 === 0 ? "bg-white" : "bg-gray-50/50"}`}>
+                    <TD className="font-mono text-xs">
                       {transcript.nucleotideChange}
                       {transcript.maneSelect && (
-                        <span className="ml-2 px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs rounded">
+                        <span className="ml-1.5 px-1.5 py-0.5 bg-yellow-100 text-yellow-800 text-[10px] rounded">
                           MANE Select
                         </span>
                       )}
-                    </td>
-                    <td className="p-3">{transcript.exon}</td>
-                    <td className="p-3">{transcript.proteinChange}</td>
-                    <td className="p-3">{transcript.molecularConsequence}</td>
-                  </tr>
+                    </TD>
+                    <TD className="text-xs">{transcript.exon}</TD>
+                    <TD className="text-xs">{transcript.proteinChange}</TD>
+                    <TD className="text-xs">{transcript.molecularConsequence}</TD>
+                  </TR>
                 ))}
-              </tbody>
-            </table>
+              </TBody>
+            </Table>
           </div>
         </div>
       </CardContent>
     </Card>
   );
-}
+};
 
 export default TranscriptInfo;
