@@ -1,11 +1,12 @@
 import { useState } from "react"
-import { AlertTriangle, ExternalLink, Lock, Plus, X } from "lucide-react"
+import { AlertTriangle, Lock, Plus, X } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../../ui/Card"
 import { Button } from "../../ui/Button"
 import { ExtIcon } from "../../ui/ExtIcon"
 import { ScoreBadge, ResultBadge, CodeStatusBadge } from "../../ui/ScoreBadge"
 import { SaveEvidenceAndComplete } from "../../ui/MarkComplete"
 import { LockedNotice } from "../../ui/LockedNotice"
+import { useTabContext } from "../../../contexts/useTabContext"
 import { CSpecGuidanceBanner } from "../../ui/CSpecGuidance"
 import { Table, THead, TBody, TR, TH, TD } from "../../ui/Table"
 import ExternalDataSourcesPanel from "../../ExternalDataSourcesPanel"
@@ -77,6 +78,7 @@ export default function InformativeVariants() {
   const [codonVariantsStatus] = useState<"idle" | "loading" | "error" | "success">("idle")
   const [codonVariantsError] = useState<string | null>(null)
 
+  const { setActiveTab } = useTabContext()
   const inheritanceSet = false
   const isPredictedEffectScoringActive = false
   const variantType: string | null = null
@@ -114,7 +116,7 @@ export default function InformativeVariants() {
         </CardHeader>
         <CardContent>
           {!inheritanceSet ? (
-            <LockedNotice />
+            <LockedNotice onGoToParameters={() => setActiveTab("general-information")} />
           ) : !isPredictedEffectScoringActive || !variantType ? (
             <div className="bg-gray-100 border border-gray-200 rounded-md p-4 text-gray-700 flex items-center gap-2 text-xs">
               <Lock className="h-4 w-4 text-gray-500 flex-none" />

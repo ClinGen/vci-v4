@@ -6,6 +6,7 @@ import { FieldRow } from "../../ui/Modal";
 import { ScoreBadge, ResultBadge } from "../../ui/ScoreBadge";
 import { SaveEvidenceAndComplete } from "../../ui/MarkComplete";
 import { LockedNotice } from "../../ui/LockedNotice";
+import { useTabContext } from "../../../contexts/useTabContext";
 import { CSpecGuidanceBanner } from "../../ui/CSpecGuidance";
 import { Disclosure } from "../../ui/Disclosure";
 import { MolecularMechanismMatrixField } from "../../ui/MolecularMechanismMatrixField";
@@ -245,6 +246,7 @@ const PredictedEffect = () => {
   // TODO: These will come from shared variant context once state management is wired up.
   // For now, default inheritanceSet to true so scoring is accessible.
   const inheritanceSet = true;
+  const { setActiveTab } = useTabContext();
 
   const updatePe = (key: keyof PeDraft, value: string) => setPeDraft({ ...peDraft, [key]: value });
 
@@ -351,7 +353,7 @@ const PredictedEffect = () => {
   const spliceAiHref = spliceAiLookupLink(null, null, null, null);
 
   const guidanceLinks = peDraft.variantType
-    ? (GUIDANCE_DOC_LINKS.predictedEffect as Record<string, { text: string; url: string }[]>)?.[peDraft.variantType]
+    ? GUIDANCE_DOC_LINKS.predictedEffect[peDraft.variantType]
     : undefined;
 
   return (
@@ -376,7 +378,7 @@ const PredictedEffect = () => {
         </CardHeader>
         <CardContent>
           {!inheritanceSet ? (
-            <LockedNotice onGoToParameters={() => {/* navigate to general-information tab */}} />
+            <LockedNotice onGoToParameters={() => setActiveTab("general-information")} />
           ) : !isScoringActive ? (
             <Button onClick={() => { setPeDraft(emptyPeDraft()); setIsScoringActive(true); setEvidenceSaved(false); }}>Start Scoring</Button>
           ) : (

@@ -3,6 +3,7 @@ import { cn } from "../../lib/utils"
 import { Button } from "./Button"
 import { Modal } from "./Modal"
 import { ExtIcon } from "./ExtIcon"
+import type { GuidanceLink } from "../../lib/referenceData"
 
 export function CSpecTag() {
   return <span className="text-indigo-600 font-mono normal-case tracking-normal text-xs ml-1">from Criteria Spec</span>;
@@ -19,11 +20,6 @@ export function CSpecMatchBadge({ criteriaDoc }: CSpecMatchBadgeProps) {
       <Info className="h-3.5 w-3.5" /> CSpec version guidance not yet available
     </span>
   );
-}
-
-interface GuidanceLink {
-  text: string
-  url: string
 }
 
 interface CSpecGuidanceBannerProps {

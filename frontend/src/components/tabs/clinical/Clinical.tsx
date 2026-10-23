@@ -1,17 +1,17 @@
 import { useState, Fragment } from "react";
 import { Button } from "../../ui/Button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../../ui/Card";
-import { Table, THead, TBody, TR, TH, TD } from "../../ui/Table";
-import { ScoreBadge, CodeStatusBadge, CodeStatusSelect } from "../../ui/ScoreBadge";
+import { CodeStatusBadge, CodeStatusSelect } from "../../ui/ScoreBadge";
 import { MiniScoreBadge } from "../../ui/StatusPill";
 import { SaveEvidenceAndComplete } from "../../ui/MarkComplete";
 import { LockedNotice } from "../../ui/LockedNotice";
-import { CSpecGuidanceBanner, GuidanceButton, GuidanceModal, GuidanceBlock } from "../../ui/CSpecGuidance";
+import { useTabContext } from "../../../contexts/useTabContext";
+import { CSpecGuidanceBanner, GuidanceButton, GuidanceModal } from "../../ui/CSpecGuidance";
 import { Modal, FieldRow, ModalSection } from "../../ui/Modal";
 import { Disclosure } from "../../ui/Disclosure";
 import { GUIDANCE_DOC_LINKS } from "../../../lib/referenceData";
 
-import { Plus, Pencil, ChevronDown, MessageSquare, AlertTriangle } from "lucide-react";
+import { Plus, Pencil, ChevronDown, MessageSquare } from "lucide-react";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -290,6 +290,7 @@ function ProbandModal({ onClose, onSave }: { onClose: () => void; onSave: () => 
 const Clinical = () => {
   // Local state
   const [inheritanceSet] = useState(true);
+  const { setActiveTab } = useTabContext();
   const [modeOfInheritance] = useState("X-linked");
   const [diseaseTerm] = useState("Cerebral Creatine Deficiency Syndrome (MONDO:23432)");
   const [savedProbands] = useState<Proband[]>(EXAMPLE_PROBANDS);
@@ -335,7 +336,7 @@ const Clinical = () => {
     return savedProbands.some((p) => p.scores[code] !== null);
   };
 
-  const guidanceLinks = (GUIDANCE_DOC_LINKS.clinicalAndLocus || []) as { text: string; url: string }[];
+  const guidanceLinks = GUIDANCE_DOC_LINKS.clinicalAndLocus;
 
   const totalCols = 2 + savedProbands.length * 2;
 
@@ -364,7 +365,7 @@ const Clinical = () => {
         </CardHeader>
         <CardContent>
           {!inheritanceSet ? (
-            <LockedNotice onGoToParameters={() => {}} />
+            <LockedNotice onGoToParameters={() => setActiveTab("general-information")} />
           ) : (
             <div className="space-y-4">
               {/* Add evidence buttons */}
@@ -609,62 +610,7 @@ const Clinical = () => {
 
       {/* Guidance Modal */}
       {showGuidance && (
-        <GuidanceModal onClose={() => setShowGuidance(false)} links={guidanceLinks}>
-          <GuidanceBlock>
-            <p className="font-semibold text-gray-800 mb-1">CLN_AFF</p>
-            <p>
-              Affected proband observations. Points follow Supplement 4 based on Phenotype Consistency, Testing
-              Relevance, and Non-Genetic Etiology; monoallelic (Table 1) and biallelic (Table 2) disorders use
-              separate point tables.
-            </p>
-          </GuidanceBlock>
-          <GuidanceBlock>
-            <p className="font-semibold text-gray-800 mb-1">CLN_DNV</p>
-            <p>
-              De novo occurrence, summed across every qualifying observation (Supplement 4, Table 3) -- whether
-              from an individually-counted proband or identified within a case-control cohort.
-            </p>
-          </GuidanceBlock>
-          <GuidanceBlock>
-            <p className="font-semibold text-gray-800 mb-1">CLN_CCS</p>
-            <p>
-              Case-control study. Eligible when the cohort includes at least 5 cases in at least 100 total
-              individuals (Supplement 4); scores +4.0 when the odds ratio exceeds 5.0 and the 95% CI excludes 1.0.
-            </p>
-          </GuidanceBlock>
-          <GuidanceBlock>
-            <p className="font-semibold text-gray-800 mb-1">LOC_PHE</p>
-            <p>
-              Specific Phenotype evidence at the locus level (Supplement 5). Diagnostic yield bins run from
-              &lt;33% (0.0) up to &gt;82% (+4.0); only the single most-informative affected proband's value applies
-              (max, not summed). Zeroed out if a non-segregation is confirmed in any proband's LOC_SEG entries.
-            </p>
-          </GuidanceBlock>
-          <GuidanceBlock>
-            <p className="font-semibold text-gray-800 mb-1">LOC_SEG</p>
-            <p>
-              Segregation evidence (Supplement 5, Figure 2), captured per affected proband's own family and summed
-              across every proband at the record level, capped at +4.0. A confirmed non-segregation scores -4.0
-              and zeroes out LOC_PHE for this locus.
-            </p>
-          </GuidanceBlock>
-          <GuidanceBlock>
-            <p className="font-semibold text-gray-800 mb-1">CLN_UAF</p>
-            <p>
-              Unaffected observations (Supplement 4, Table 5). Points depend on age-matched penetrance of the MDE
-              and, for autosomal recessive/X-linked disorders, the proband's own zygosity or second-variant trans
-              classification -- from 0.0 (penetrance &lt;80%, or not established) down to -4.0.
-            </p>
-          </GuidanceBlock>
-          <GuidanceBlock>
-            <p className="font-semibold text-gray-800 mb-1">CLN_ALT</p>
-            <p>
-              Alternate cause identified for the phenotype (Supplement 4, Table 4). Points depend on phenotype
-              severity relative to the MDE, from 0.0 down to -1.0 -- the -1.0 tier only applies when the
-              alternative-cause variant is in the same gene as the VBC.
-            </p>
-          </GuidanceBlock>
-        </GuidanceModal>
+        <GuidanceModal onClose={() => setShowGuidance(false)} links={guidanceLinks} />
       )}
     </>
   );

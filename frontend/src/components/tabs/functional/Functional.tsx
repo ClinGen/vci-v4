@@ -5,6 +5,7 @@ import { Button } from "../../ui/Button"
 import { ScoreBadge, CodeStatusBadge, formatSignedScore } from "../../ui/ScoreBadge"
 import { SaveEvidenceAndComplete } from "../../ui/MarkComplete"
 import { LockedNotice } from "../../ui/LockedNotice"
+import { useTabContext } from "../../../contexts/useTabContext"
 import { CSpecGuidanceBanner } from "../../ui/CSpecGuidance"
 import { Table, THead, TBody, TR, TH, TD } from "../../ui/Table"
 import { GUIDANCE_DOC_LINKS } from "../../../lib/referenceData"
@@ -131,6 +132,7 @@ export default function Functional() {
   const [fxnEvidenceSaved, setFxnEvidenceSaved] = useState(false)
   const [sectionComplete, setSectionComplete] = useState(false)
 
+  const { setActiveTab } = useTabContext()
   const inheritanceSet = false
   const isPredictedEffectScoringActive = false
   const variantType: string | null = null
@@ -168,7 +170,7 @@ export default function Functional() {
         </CardHeader>
         <CardContent>
           {!inheritanceSet ? (
-            <LockedNotice />
+            <LockedNotice onGoToParameters={() => setActiveTab("general-information")} />
           ) : !isPredictedEffectScoringActive || !variantType ? (
             <div className="bg-gray-100 border border-gray-200 rounded-md p-4 text-gray-700 flex items-center gap-2 text-xs">
               <Lock className="h-4 w-4 text-gray-500 flex-none" />

@@ -7,7 +7,7 @@ import { ScoreBadge, CodeStatusBadge, CodeStatusSelect } from "../../ui/ScoreBad
 import { SaveEvidenceAndComplete } from "../../ui/MarkComplete";
 import { LockedNotice } from "../../ui/LockedNotice";
 import { CSpecGuidanceBanner } from "../../ui/CSpecGuidance";
-import { ExtIcon, ExternalLinkIconSvg } from "../../ui/ExtIcon";
+import { ExternalLinkIconSvg } from "../../ui/ExtIcon";
 import { Disclosure } from "../../ui/Disclosure";
 import { FieldRow } from "../../ui/Modal";
 import ExternalDataSourcesPanel from "../../ExternalDataSourcesPanel";

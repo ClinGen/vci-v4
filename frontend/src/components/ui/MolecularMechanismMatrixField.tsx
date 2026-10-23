@@ -10,7 +10,7 @@ interface MolecularMechanismMatrixFieldProps {
   initialScore: number
   modifiedScore: number | null
   fraction: number | undefined
-  matrixFractionFn: (row: string, col: string) => number
+  matrixFractionFn: (row: string, col: string) => number | undefined
 }
 
 export function MolecularMechanismMatrixField({
@@ -53,11 +53,14 @@ export function MolecularMechanismMatrixField({
               {Object.entries(exonRelevanceLabel).map(([rowKey, rowLabel]) => (
                 <tr key={rowKey}>
                   <th className="border border-gray-200 bg-gray-50 px-2 py-1 text-left">{rowLabel}</th>
-                  {Object.keys(lofMechanismLabel).map((colKey) => (
-                    <td key={colKey} className="border border-gray-200 px-2 py-1 text-center font-mono text-gray-700">
-                      {Math.round(matrixFractionFn(rowKey, colKey) * 100)}%
-                    </td>
-                  ))}
+                  {Object.keys(lofMechanismLabel).map((colKey) => {
+                    const fractionForCell = matrixFractionFn(rowKey, colKey);
+                    return (
+                      <td key={colKey} className="border border-gray-200 px-2 py-1 text-center font-mono text-gray-700">
+                        {fractionForCell === undefined ? "—" : `${Math.round(fractionForCell * 100)}%`}
+                      </td>
+                    );
+                  })}
                 </tr>
               ))}
             </tbody>

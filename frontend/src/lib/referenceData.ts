@@ -36,7 +36,17 @@ export const PE_VARIANT_TYPE_LABEL: Record<string, string> = {
   "canonical-splice": "Canonical Splice",
 };
 
-export const GUIDANCE_DOC_LINKS: Record<string, unknown> = {
+export interface GuidanceLink {
+  text: string;
+  url: string;
+}
+
+export const GUIDANCE_DOC_LINKS: {
+  predictedEffect: Record<string, GuidanceLink[]>;
+  informativeVariants: GuidanceLink[];
+  functionalData: GuidanceLink[];
+  clinicalAndLocus: GuidanceLink[];
+} = {
   predictedEffect: {
     missense: [{ text: "SUPPLEMENTARY MATERIAL 6. MISSENSE VARIANTS", url: "https://docs.google.com/document/d/1eerqnL0kRq1se341-pxHxNI7HrPP9_kDlLL4eDvt-Gk/edit?tab=t.0#heading=h.9gxc2jomj4e" }],
     "canonical-splice": [{ text: "SUPPLEMENTARY MATERIAL 11. CANONICAL SPLICE VARIANTS", url: "https://docs.google.com/document/d/1LGSPW90-n0EbqGjfLKQ2MpTHPK8Ai-hUuMAkqqhyi80/edit?tab=t.0" }],

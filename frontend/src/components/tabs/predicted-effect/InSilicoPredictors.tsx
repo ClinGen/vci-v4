@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/Card";
 import { Table, THead, TBody, TR, TH, TD } from "../../ui/Table";
 import { Badge } from "../../ui/Badge";
-import { ExtIcon } from "../../ui/ExtIcon";
 import { Button } from "../../ui/Button";
 import { RefreshCw } from "lucide-react";
 

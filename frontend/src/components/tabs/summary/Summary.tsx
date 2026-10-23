@@ -156,9 +156,10 @@ export default function Summary() {
     ? CLASSIFICATION_TONES[classification] || { bg: "bg-gray-100", text: "text-gray-500", divider: "border-gray-400/20" }
     : { bg: "bg-gray-100", text: "text-gray-500", divider: "border-gray-400/20" }
 
-  const rowsWithState = SUMMARY_ROWS.map((row) => ({
+  // Every row is "not evaluated" until scoring state is shared across tabs (Phase 3).
+  const rowsWithState = SUMMARY_ROWS.map((row): SummaryRow & { state: RowState; comment: string } => ({
     ...row,
-    state: { type: "notEvaluated" as const },
+    state: { type: "notEvaluated" },
     comment: "",
   }))
   const scoredRows = rowsWithState.filter((r) => r.state.type === "score")
