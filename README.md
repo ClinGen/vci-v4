@@ -48,7 +48,7 @@ justfile               Shortcuts for the commands below
 
 ## Local development
 
-**You need:** Docker Desktop, and Node 20 through [nvm](https://github.com/nvm-sh/nvm) (the version is in `.nvmrc`). The backend runs in Docker, so a local Python is only needed for editor support. [just](https://github.com/casey/just) is optional; each shortcut below is a single command.
+**You need:** Docker Desktop, and Node 24 through [nvm](https://github.com/nvm-sh/nvm) (the version is in `.nvmrc`). The backend runs in Docker, so a local Python is only needed for editor support. [just](https://github.com/casey/just) is optional; each shortcut below is a single command.
 
 ### Backend and database
 
@@ -86,7 +86,8 @@ The frontend doesn't call the API yet; coming soon.
 Every pull request runs the CI workflow in `.github/workflows/ci.yml`. Run the same checks locally before pushing.
 
 - **Backend:** `just test` runs pytest against a separate `vci_test` database on the local Postgres, so your development data is never touched. The suite rebuilds the test database from the migrations, checks that every migration can be undone, fails if a model changed without a migration, and checks the rules the database enforces (uniqueness, allowed values, the append-only audit table). Each test runs in a transaction that is rolled back afterward.
-- **Frontend:** `npm run lint` and `npm run build` (which type-checks) in `frontend/`.
+- **Frontend:** `npm run lint`, `npm test` and `npm run build` (which type-checks) in `frontend/`. `npm test` runs the Vitest suite for the SVCv4 scoring rules in `src/lib/scoring.test.ts`; each expected value is labeled with its source so curators can review it. All scoring rules live in `src/lib/scoring.ts`; don't define them in components.
+- **Install scripts:** npm 11 doesn't run packages' install scripts unless they're approved. `package.json` records under `allowScripts` that esbuild's and Tailwind's scripts are denied; neither is needed, because both ship their native binaries as separate packages.
 
 New features come with tests: API tests in `backend/tests/` for each endpoint, and a test for each new database rule.
 
