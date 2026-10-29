@@ -22,151 +22,24 @@ import {
 } from "../../../lib/referenceData";
 import { ucscLinkForGenomicHgvs } from "../../../lib/genomeBrowserLinks";
 import { spliceAiLookupLink } from "../../../lib/spliceAiLink";
-
-/* ------------------------------------------------------------------ */
-/*  Scoring constants (from prototype scoring.js -- will move to       */
-/*  lib/scoring.ts once the full engine is migrated)                   */
-/* ------------------------------------------------------------------ */
-
-const MIS_PREDICTOR_THRESHOLDS: Record<string, { direction: string; tiers: [number, number][] }> = {
-  AlphaMissense: { direction: "ascending", tiers: [[0.070, -3.0], [0.099, -2.0], [0.169, -1.0], [0.791, 0.0], [0.905, 1.0], [0.971, 2.0], [0.989, 3.0], [Infinity, 4.0]] },
-  BayesDel: { direction: "ascending", tiers: [[-0.520, -3.0], [-0.360, -2.0], [-0.180, -1.0], [0.129, 0.0], [0.269, 1.0], [0.409, 2.0], [0.499, 3.0], [Infinity, 4.0]] },
-  ESM1b: { direction: "descending", tiers: [[-8.8, -4.0], [3.1, -3.0], [6.3, -2.0], [10.6, -1.0], [12.1, 0.0], [13.9, 1.0], [23.9, 2.0], [Infinity, 3.0]] },
-  MutPred2: { direction: "ascending", tiers: [[0.010, -3.0], [0.031, -2.0], [0.197, -1.0], [0.391, 0.0], [0.736, 1.0], [0.828, 2.0], [0.931, 3.0], [Infinity, 4.0]] },
-  REVEL: { direction: "ascending", tiers: [[0.016, -4.0], [0.052, -3.0], [0.183, -2.0], [0.290, -1.0], [0.643, 0.0], [0.772, 1.0], [0.878, 2.0], [0.931, 3.0], [Infinity, 4.0]] },
-  VARITY_R: { direction: "ascending", tiers: [[0.036, -4.0], [0.063, -3.0], [0.116, -2.0], [0.251, -1.0], [0.674, 0.0], [0.841, 1.0], [0.914, 2.0], [0.964, 3.0], [Infinity, 4.0]] },
-  VEST4: { direction: "ascending", tiers: [[0.077, -3.0], [0.302, -2.0], [0.449, -1.0], [0.763, 0.0], [0.860, 1.0], [0.908, 2.0], [0.964, 3.0], [Infinity, 4.0]] },
-};
-
-function misPredictorScore(predictor: string, scoreStr: string): number | null {
-  const n = parseFloat(scoreStr);
-  const table = MIS_PREDICTOR_THRESHOLDS[predictor];
-  if (isNaN(n) || !table) return null;
-  const effectiveScore = table.direction === "descending" ? -n : n;
-  for (const [upperBound, pts] of table.tiers) {
-    if (effectiveScore <= upperBound) return pts;
-  }
-  return null;
-}
-
-const EXON_RELEVANCE_LABEL: Record<string, string> = {
-  all: "Residue present in all transcripts (100%)",
-  most: "Residue present in most disease-specific/highly expressed transcripts (50%)",
-  none: "Residue not expressed in clinically relevant transcripts (0%)",
-};
-
-const LOF_MECHANISM_LABEL: Record<string, string> = {
-  established: "Established",
-  likely: "Likely",
-  suspected: "Suspected",
-  uncertain: "Uncertain or not LoF",
-};
-
-const EXON_RELEVANCE_MATRIX_LABEL: Record<string, string> = {
-  all: "All",
-  most: "Most",
-  few: "Few",
-};
-
-const MOLECULAR_MECHANISM_MATRIX: Record<string, Record<string, number>> = {
-  all: { established: 1.0, likely: 0.5, suspected: 0.25, uncertain: 0.0 },
-  most: { established: 0.5, likely: 0.25, suspected: 0.0, uncertain: 0.0 },
-  few: { established: 0.0, likely: 0.0, suspected: 0.0, uncertain: 0.0 },
-};
-
-function molecularMechanismFraction(exonRelevance: string, lofMechanism: string): number | undefined {
-  const row = MOLECULAR_MECHANISM_MATRIX[exonRelevance];
-  return row ? row[lofMechanism] : undefined;
-}
-
-const SPL_ASSESSMENT_LABEL: Record<string, string> = {
-  likely: "Splicing change likely -- an in silico splice predictor (e.g. SpliceAI, Pangolin) indicates the GT/AG dinucleotide change is predicted to disrupt normal splicing",
-  uncertain: "Splicing change uncertain -- predictor score doesn't clearly support or rule out a splicing effect (+0.0)",
-  unlikely: "Splicing change unlikely -- predictor indicates the variant is unlikely to disrupt normal splicing, e.g. a nearby cryptic or alternate splice site may compensate (−1.0)",
-};
-
-const SPL_SPA_REDUCE_TIERS: Record<string, { label: string; fraction: number }> = {
-  "near-complete": { label: "Near complete or complete presence of aberrant product", fraction: 0.0 },
-  substantial: { label: "Substantial presence of aberrant product", fraction: 0.25 },
-  incomplete: { label: "Incomplete or no presence of aberrant product", fraction: 1.0 },
-};
-
-const SPL_SPA_BLUE_TIERS: Record<string, { label: string; points: number }> = {
-  "clear-disruptive": { label: "Clear evidence of a disruptive splice effect", points: 2.0 },
-  "some-disruptive": { label: "Some evidence of a disruptive splice effect", points: 1.0 },
-  unconvincing: { label: "Unconvincing evidence of a splice effect", points: 0.0 },
-  "some-no-effect": { label: "Some evidence of no splice effect", points: -1.0 },
-  "convincing-no-effect": { label: "Convincing evidence of no splice effect", points: -2.0 },
-};
-
-const SPL_SPA_VIOLET_TIERS: Record<string, { label: string; points: number | null; reconsider?: boolean }> = {
-  "near-complete": { label: "Near complete or complete presence of aberrant product", points: null, reconsider: true },
-  "low-level": { label: "Low-level presence of aberrant product", points: 0.0 },
-  "incomplete-or-no": { label: "Incomplete or no presence of aberrant product", points: -2.0 },
-};
-
-const MIS_SPL_ASSAY_BOOST_TIERS: Record<string, { label: string; fraction: number }> = {
-  full: { label: "Near complete or complete presence of aberrant product", fraction: 1.0 },
-  partial: { label: "Substantial presence of aberrant product", fraction: 0.5 },
-  none: { label: "Incomplete or no presence of aberrant product (may need to reconsider Initial Evidence Points)", fraction: 0.0 },
-};
-
-function splSpaMode(assessment: string): string | null {
-  if (assessment === "likely") return "reduce";
-  if (assessment === "uncertain") return "independent-blue";
-  if (assessment === "unlikely") return "independent-violet";
-  return null;
-}
-
-/* ------------------------------------------------------------------ */
-/*  Local scoring helpers                                              */
-/* ------------------------------------------------------------------ */
-
-function nulInitialScore(draft: PeDraft): number | null {
-  if (draft.nulNmd === "predicted") {
-    if (draft.nulAltStart === "none") return 6.0;
-    if (draft.nulAltStart === "") return null;
-    if (draft.nulAltStart === "predicted-rescue") {
-      const map: Record<string, number> = { "retains-function": -1.0, ">50": 6.0, ">25": 4.0, ">10": 2.0, "<10": 0.0 };
-      return map[draft.nulAltStartFunction] ?? null;
-    }
-    return null;
-  }
-  if (draft.nulNmd === "not-predicted") {
-    const map: Record<string, number> = { ">50": 6.0, ">25": 4.0, ">10": 2.0, "<10": 0.0 };
-    return map[draft.nulProteinImpact] ?? null;
-  }
-  return null;
-}
-
-function nulInitialCode(draft: PeDraft): string {
-  return draft.nulNmd === "predicted" && draft.nulAltStart === "none" ? "NUL_PRD" : "CDS_PRD";
-}
-
-function splInitialScore(draft: PeDraft): number | null {
-  if (draft.splAssessment === "uncertain") return 0.0;
-  if (draft.splAssessment === "unlikely") return -1.0;
-  if (draft.splAssessment === "likely") {
-    if (draft.splNmd === "predicted") return 6.0;
-    if (draft.splNmd === "not-predicted-frameshift") {
-      const map: Record<string, number> = { ">50": 6.0, ">25": 4.0, ">10": 2.0, "<10": 0.0 };
-      return map[draft.splProteinImpact] ?? null;
-    }
-    if (draft.splNmd === "not-predicted-no-frameshift") {
-      const map: Record<string, number> = { rescue: -1.0, ">50": 6.0, ">25": 4.0, ">10": 2.0, "<=10-damaging": 1.0, "<=10-indeterminate": 0.0, "<=10-benign": -0.5 };
-      return map[draft.splNoFrameshiftProteinImpact] ?? null;
-    }
-  }
-  return null;
-}
-
-function molecularMechanismModifiedScore(initial: number | null, exonRelevance: string, lofMechanism: string): number | null {
-  if (initial === null) return null;
-  if (initial <= 0) return initial;
-  const mult = molecularMechanismFraction(exonRelevance, lofMechanism);
-  if (mult === undefined) return null;
-  return initial * mult;
-}
+import {
+  EXON_RELEVANCE_LABEL,
+  EXON_RELEVANCE_MATRIX_LABEL,
+  LOF_MECHANISM_LABEL,
+  MIS_PREDICTOR_THRESHOLDS,
+  MIS_SPL_ASSAY_BOOST_TIERS,
+  SPL_ASSESSMENT_LABEL,
+  SPL_SPA_BLUE_TIERS,
+  SPL_SPA_REDUCE_TIERS,
+  SPL_SPA_VIOLET_TIERS,
+  misPredictorScore,
+  molecularMechanismFraction,
+  molecularMechanismModifiedScore,
+  nulInitialCode,
+  nulInitialScore,
+  splInitialScore,
+  splSpaMode,
+} from "../../../lib/scoring";
 
 /* ------------------------------------------------------------------ */
 /*  Draft state shape                                                  */

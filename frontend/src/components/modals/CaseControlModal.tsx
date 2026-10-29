@@ -5,6 +5,7 @@ import { ScoreBadge, ResultBadge } from "../ui/ScoreBadge"
 import { Modal, FieldRow, ModalSection } from "../ui/Modal"
 import SourceDetailFields from "../SourceDetailFields"
 import { isSourceDetailComplete, curationSourceLabel } from "../../lib/sourceDetail"
+import { clnCcsDnvScore, clnCcsEligible, clnCcsScore } from "../../lib/scoring"
 import {
   INHERITANCE_OPTIONS,
   PROBAND_SOURCE_OPTIONS,
@@ -61,27 +62,6 @@ export function emptyCaseControlDraft(): CaseControlDraft {
 }
 
 // ---------------------------------------------------------------------------
-// Scoring stub helpers
-// ---------------------------------------------------------------------------
-
-function isEligible(caseCount: string, cohortSize: string): boolean {
-  const cases = parseInt(caseCount, 10)
-  const cohort = parseInt(cohortSize, 10)
-  if (isNaN(cases) || isNaN(cohort)) return true
-  return cases >= 5 && cohort >= 100
-}
-
-function computeClnCcsValue(_draft: CaseControlDraft): number | null {
-  // Stub -- full implementation in scoring engine
-  return null
-}
-
-function computeClnDnvValue(_draft: CaseControlDraft): number | null {
-  // Stub -- full implementation in scoring engine
-  return null
-}
-
-// ---------------------------------------------------------------------------
 // CaseControlModal
 // ---------------------------------------------------------------------------
 
@@ -123,9 +103,14 @@ export function CaseControlModal({
     ? "Finish the source details above before saving."
     : ""
 
-  const clnCcsValue = computeClnCcsValue(draft)
-  const clnCcsDnvValue = computeClnDnvValue(draft)
-  const clnCcsIsEligible = isEligible(draft.caseCount, draft.cohortSize)
+  const clnCcsValue = clnCcsScore(draft.oddsRatio, draft.ciExcludes1)
+  const clnCcsDnvValue = clnCcsDnvScore(
+    modeOfInheritance,
+    draft.dnvPhenotypicSpecificity,
+    draft.dnvStatus,
+    draft.dnvParentalConfirmation,
+  )
+  const clnCcsIsEligible = clnCcsEligible(draft.caseCount, draft.cohortSize)
 
   const handleSave = () => {
     const curatedAtMs = draft.curatedAtMs || Date.now()

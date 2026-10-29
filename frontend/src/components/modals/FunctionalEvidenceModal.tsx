@@ -3,6 +3,12 @@ import { ExternalLink } from "lucide-react"
 import { Button } from "../ui/Button"
 import { Modal, FieldRow, ModalSection } from "../ui/Modal"
 import SourceDetailFields from "../SourceDetailFields"
+import {
+  functionalEvidencePoints,
+  ODDS_PATH_BENIGN_TABLE,
+  ODDS_PATH_PATHOGENIC_TABLE,
+  TABLE_3_ANIMAL_MODEL,
+} from "../../lib/scoring"
 
 // ---------------------------------------------------------------------------
 // Types
@@ -47,65 +53,6 @@ function emptyEntry(): FunctionalEvidenceEntry {
     includeInScore: true,
     comment: "",
   }
-}
-
-// ---------------------------------------------------------------------------
-// Scoring stub helpers
-//
-// These reference tables and the points function are stubs until the full
-// scoring engine is migrated. The real implementation uses OddsPath lookup
-// tables from Supplement 20 and mechanism-override logic.
-// ---------------------------------------------------------------------------
-
-/** OddsPath pathogenic-direction table (benign control count x pathogenic control count). */
-const ODDS_PATH_PATHOGENIC_TABLE: number[][] = [
-  [0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0],
-  [0, 0, 0.5, 1.0, 1.5, 2.0],
-  [0, 0, 0.5, 1.0, 1.5, 2.0],
-  [0, 0, 0.5, 1.5, 2.0, 2.5],
-]
-
-/** OddsPath benign-direction table. */
-const ODDS_PATH_BENIGN_TABLE: number[][] = [
-  [0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0],
-  [0, 0, -0.5, -1.0, -1.5, -2.0],
-  [0, 0, -0.5, -1.0, -1.5, -2.0],
-  [0, 0, -0.5, -1.5, -2.0, -2.5],
-]
-
-/** Animal model scoring reference (Table 3). */
-interface AnimalModelRow {
-  phenotypicConsistency: string
-  inheritancePattern: string
-  proteinSimilarity: string
-  points: number
-}
-
-const TABLE_3_ANIMAL_MODEL: AnimalModelRow[] = [
-  { phenotypicConsistency: "Specific for MDE", inheritancePattern: "Same as MDE", proteinSimilarity: "Orthologous protein", points: 2.0 },
-  { phenotypicConsistency: "Consistent with MDE", inheritancePattern: "Same as MDE", proteinSimilarity: "Orthologous protein", points: 1.0 },
-  { phenotypicConsistency: "Consistent with MDE", inheritancePattern: "Different from MDE", proteinSimilarity: "Orthologous protein", points: 0.5 },
-  { phenotypicConsistency: "Consistent with MDE", inheritancePattern: "Any", proteinSimilarity: "Non-orthologous protein", points: 0.5 },
-  { phenotypicConsistency: "Not consistent", inheritancePattern: "Any", proteinSimilarity: "Any", points: 0.0 },
-]
-
-function functionalEvidencePoints(entry: FunctionalEvidenceEntry): number | null {
-  if (entry.kind === "model-organism") {
-    return entry.manualPoints !== "" ? parseFloat(entry.manualPoints) : null
-  }
-  if (entry.mechanismConsistent === false) return 0
-  const benign = parseInt(entry.numBenignControls, 10)
-  const path = parseInt(entry.numPathogenicControls, 10)
-  if (isNaN(benign) || isNaN(path)) return null
-  if (!entry.resultRange) return null
-  const bIdx = Math.min(benign, 5)
-  const pIdx = Math.min(path, 5)
-  const table = entry.resultRange === "pathogenic" ? ODDS_PATH_PATHOGENIC_TABLE : ODDS_PATH_BENIGN_TABLE
-  return table[bIdx]?.[pIdx] ?? null
 }
 
 // ---------------------------------------------------------------------------
@@ -201,7 +148,11 @@ export function FunctionalEvidenceModal({ isMissense = false, onClose, onSave }:
   const update = <K extends keyof FunctionalEvidenceEntry>(field: K, value: FunctionalEvidenceEntry[K]) =>
     setDraft({ ...draft, [field]: value })
 
-  const points = functionalEvidencePoints(draft)
+  // The form stores an unanswered yes/no as ""; scoring treats a missing answer as not yet evaluated.
+  const points = functionalEvidencePoints({
+    ...draft,
+    mechanismConsistent: draft.mechanismConsistent === "" ? undefined : draft.mechanismConsistent,
+  })
 
   const saveBlockedReason = !draft.source
     ? "Enter the MAVEdb record ID or URL above before saving."

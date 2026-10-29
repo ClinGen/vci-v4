@@ -1042,7 +1042,7 @@ export function caseReasoningFor(code: string, p: Proband, modeOfInheritance: st
         if (!p.clnAff.phenotypicSpecificity) return ["Phenotype Consistency has not been selected in CLN_AFF yet."];
         if (p.clnDnv.deNovoStatus !== "Is de novo") return [`de novo status: ${p.clnDnv.deNovoStatus}.`];
         const spec = p.clnAff.phenotypicSpecificity === "Specific for MDE" ? "specific" : "consistent";
-        return [`Using ${spec} phenotype category from CLN_AFF; de novo with ${(p.clnDnv.parentalConfirmation || "").toLowerCase()} parental relationships.`];
+        return [`Using ${spec} phenotype category from CLN_AFF; de novo with ${(p.clnDnv.parentalConfirmation || "unspecified").toLowerCase()} parental relationships.`];
       }
       case "LOC_PHE": {
         if (p.locPhe!.vbcEligible === "no-data") return ["No robust diagnostic yield / phenotype specificity data available for this disorder (LOC_PHE_ND)."];

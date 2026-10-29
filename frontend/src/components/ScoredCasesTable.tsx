@@ -4,6 +4,22 @@ import { MiniScoreBadge } from "./ui/StatusPill"
 import { Disclosure } from "./ui/Disclosure"
 import { CodeStatusBadge, CodeStatusSelect } from "./ui/ScoreBadge"
 import type { ProbandDraft } from "./modals/ProbandModal"
+import {
+  CASE_ROW_META,
+  CASE_ROW_ORDER,
+  caseReasoningFor,
+  caseRowPlan,
+  caseScoreFor,
+  clnAffAggregate,
+  clnAltAggregate,
+  clnDnvAggregate,
+  clnUafAggregate,
+  locCombinedScore,
+  locPheAfterSegregation,
+  locPheAggregate,
+  locSegAggregate,
+  needsMoiReview,
+} from "../lib/scoring"
 
 // ---------------------------------------------------------------------------
 // Types
@@ -35,93 +51,6 @@ interface CodeComments {
 
 interface HasCodeComment {
   [code: string]: boolean
-}
-
-// ---------------------------------------------------------------------------
-// Scoring stub helpers
-//
-// These will be replaced by imports from the full scoring engine once it
-// is migrated to lib/scoring.ts / ScoringContext.
-// ---------------------------------------------------------------------------
-
-/** Evidence code ordering for the scored cases table. */
-const CASE_ROW_ORDER = [
-  "CLN_AFF",
-  "CLN_CCS",
-  "CLN_DNV",
-  "CLN_UAF",
-  "CLN_ALT",
-  "LOC_PHE",
-  "LOC_SEG",
-  "LOC",
-] as const
-
-type CaseRowCode = (typeof CASE_ROW_ORDER)[number]
-
-interface CaseRowMeta {
-  desc: string
-}
-
-const CASE_ROW_META: Record<CaseRowCode, CaseRowMeta> = {
-  CLN_AFF: { desc: "Affected proband" },
-  CLN_CCS: { desc: "Case-control study" },
-  CLN_DNV: { desc: "de novo" },
-  CLN_UAF: { desc: "Unaffected proband" },
-  CLN_ALT: { desc: "Alternative cause" },
-  LOC_PHE: { desc: "Specific phenotype" },
-  LOC_SEG: { desc: "Co-segregation" },
-  LOC: { desc: "Locus (combined)" },
-}
-
-// Stub scoring functions -- return null until the full engine is migrated
-function caseScoreFor(_code: string, _proband: ProbandDraft, _moi: string): number | null {
-  return null
-}
-
-function caseReasoningFor(_code: string, _proband: ProbandDraft, _moi: string): string[] {
-  return []
-}
-
-interface CaseRowPlan {
-  type: "active" | "na" | "mergeStart" | "mergeSkip"
-  span?: number
-}
-
-function caseRowPlan(scoringMode: string): Record<string, CaseRowPlan> {
-  // Simple stub -- mark codes as active or na based on scoring mode
-  const plan: Record<string, CaseRowPlan> = {}
-  for (const code of CASE_ROW_ORDER) {
-    if (scoringMode === "affected") {
-      plan[code] = ["CLN_AFF", "CLN_DNV", "LOC_PHE", "LOC_SEG", "LOC"].includes(code)
-        ? { type: "active" }
-        : { type: "na", span: 1 }
-    } else if (scoringMode === "unaffected") {
-      plan[code] = code === "CLN_UAF" ? { type: "active" } : { type: "na", span: 1 }
-    } else if (scoringMode === "alternative") {
-      plan[code] = code === "CLN_ALT" ? { type: "active" } : { type: "na", span: 1 }
-    } else {
-      plan[code] = { type: "na", span: 1 }
-    }
-  }
-  return plan
-}
-
-function needsMoiReview(proband: ProbandDraft, _moi: string): boolean {
-  // Stub -- will check if clnTableAtSave differs from current
-  return false && !!proband
-}
-
-// Aggregate stubs
-function clnAffAggregate(_probands: ProbandDraft[], _moi: string): number | null { return null }
-function clnUafAggregate(_probands: ProbandDraft[], _moi: string): number | null { return null }
-function clnAltAggregate(_probands: ProbandDraft[]): number | null { return null }
-function clnDnvAggregate(_probands: ProbandDraft[], _moi: string, _ccsDnv: number | null): number | null { return null }
-function locPheAggregate(_probands: ProbandDraft[]): number { return 0 }
-function locPheAfterSegregation(phe: number, seg: number | null): number { return seg === -4.0 ? 0 : phe }
-function locSegAggregate(_probands: ProbandDraft[], _moi: string): number | null { return null }
-function locCombinedScore(phe: number, seg: number | null): number | null {
-  if (phe === 0 && seg === null) return null
-  return phe + (seg ?? 0)
 }
 
 // Overridable codes pilot (per prototype)

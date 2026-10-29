@@ -16,6 +16,20 @@ import {
   PROBAND_SOURCE_OPTION_LABELS,
   PROBAND_ZYGOSITY_OPTIONS,
 } from "../../lib/referenceData"
+import {
+  CLN_ALT_GENE_RELATIONSHIP_OPTIONS,
+  CLN_ALT_SEVERITY_OPTIONS,
+  CLN_UAF_SECOND_VARIANT_OPTIONS,
+  LOC_PHE_ELIGIBILITY_OPTIONS,
+  LOC_PHE_YIELD_BINS,
+  caseScoreFor,
+  clnTableFor,
+  clnUafMoiBucket,
+  locPheAggregate,
+  locSegEntryPoints,
+  locSegMoiBucket,
+  locSegRowOptionsFor,
+} from "../../lib/scoring"
 
 // ---------------------------------------------------------------------------
 // Types
@@ -107,6 +121,8 @@ export interface ProbandDraft {
 
 export type ScoringMode = "affected" | "unaffected" | "alternative"
 
+type DraftGroup = "sourceDetail" | "compoundHetVariant" | "clnAff" | "clnDnv" | "clnUaf" | "clnAlt" | "locPhe" | "locSeg"
+
 export function emptyProbandDraft(): ProbandDraft {
   return {
     id: "",
@@ -140,99 +156,6 @@ export function emptyProbandDraft(): ProbandDraft {
     curatedBy: null,
   }
 }
-
-// ---------------------------------------------------------------------------
-// Scoring stub helpers
-//
-// These functions are stubs that return placeholder values until the full
-// scoring engine is migrated from the prototype's lib/scoring.js into
-// lib/scoring.ts / ScoringContext. The real implementations are 1600+ lines
-// and cover MOI-dependent table lookups (biallelic vs monoallelic), odds-path
-// calculations, locus-level aggregation, etc.
-// ---------------------------------------------------------------------------
-
-function caseScoreFor(_code: string, _proband: ProbandDraft, _moi: string): number | null {
-  return null
-}
-
-function clnTableFor(modeOfInheritance: string, _proband: ProbandDraft): string {
-  if (
-    modeOfInheritance.startsWith("Autosomal recessive") ||
-    modeOfInheritance.startsWith("X-linked recessive")
-  ) {
-    return "biallelic"
-  }
-  return "monoallelic"
-}
-
-function clnUafMoiBucket(modeOfInheritance: string): string {
-  if (
-    modeOfInheritance.startsWith("Autosomal recessive") ||
-    modeOfInheritance.startsWith("X-linked")
-  ) {
-    return "recessive"
-  }
-  return "dominant"
-}
-
-function locPheAggregate(_probands: ProbandDraft[]): number {
-  return 0
-}
-
-function locSegMoiBucket(modeOfInheritance: string): string | null {
-  if (
-    modeOfInheritance.startsWith("Autosomal dominant") ||
-    modeOfInheritance.startsWith("Semidominant") ||
-    modeOfInheritance.startsWith("X-linked")
-  ) {
-    return "dominant"
-  }
-  if (modeOfInheritance.startsWith("Autosomal recessive")) {
-    return "recessive"
-  }
-  return null
-}
-
-interface SegRowOption {
-  value: string
-  label: string
-  points: number
-  unaffected?: boolean
-  nonSegregation?: boolean
-  confirmLabel?: string
-}
-
-function locSegRowOptionsFor(_moi: string): SegRowOption[] {
-  // Stub -- returns empty until full scoring engine is migrated
-  return []
-}
-
-function locSegEntryPoints(_entry: SegregationObservation, _moi: string): number {
-  return 0
-}
-
-// Stub constants -- will come from the full scoring engine
-const CLN_UAF_SECOND_VARIANT_OPTIONS: { value: string; label: string }[] = []
-const CLN_ALT_GENE_RELATIONSHIP_OPTIONS: { value: string; label: string }[] = [
-  { value: "same-gene", label: "Same gene as VBC" },
-  { value: "different-gene", label: "Different gene from VBC" },
-]
-const CLN_ALT_SEVERITY_OPTIONS: { value: string; label: string; sameGeneOnly?: boolean }[] = [
-  { value: "more-severe", label: "More severe than expected for established MDE" },
-  { value: "less-severe", label: "Less severe than expected for established MDE" },
-  { value: "not-consistent-recessive", label: "Not consistent with established recessive disease entity", sameGeneOnly: true },
-]
-const LOC_PHE_YIELD_BINS: { value: string }[] = [
-  { value: "<10%" },
-  { value: "10-24%" },
-  { value: "25-49%" },
-  { value: "50-81%" },
-  { value: ">=82%" },
-]
-const LOC_PHE_ELIGIBILITY_OPTIONS: { value: string; label: string }[] = [
-  { value: "yes", label: "Yes -- VBC is eligible for LOC_PHE scoring" },
-  { value: "no", label: "No -- not eligible" },
-]
 
 // ---------------------------------------------------------------------------
 // SegregationObservationRow (internal sub-component)
@@ -283,7 +206,7 @@ function SegregationObservationRow({ entry, modeOfInheritance, onRemove, onUpdat
         {rows.map((o) => (
           <option key={o.value} value={o.value}>
             {o.label}
-            {o.nonSegregation ? "" : ` (${o.points >= 0 ? "+" : ""}${o.points.toFixed(1)})`}
+            {o.nonSegregation || o.points === undefined ? "" : ` (${o.points >= 0 ? "+" : ""}${o.points.toFixed(1)})`}
           </option>
         ))}
       </select>
@@ -387,19 +310,12 @@ export function ProbandModal({
   const [numberOfProbands, setNumberOfProbands] = useState(existingProband?.numberOfProbands ?? "")
   const [showSwitchFormMenu, setShowSwitchFormMenu] = useState(false)
 
-  // Helper to update a nested group field in the draft
-  const updateDraftGroup = <K extends keyof ProbandDraft>(
-    group: K,
-    field: string,
-    value: unknown,
+  const updateDraftGroup = <G extends DraftGroup, F extends keyof ProbandDraft[G]>(
+    group: G,
+    field: F,
+    value: ProbandDraft[G][F],
   ) => {
-    setDraft((prev) => ({
-      ...prev,
-      [group]:
-        typeof prev[group] === "object" && prev[group] !== null
-          ? { ...(prev[group] as Record<string, unknown>), [field]: value }
-          : value,
-    }))
+    setDraft((prev) => ({ ...prev, [group]: { ...prev[group], [field]: value } }))
   }
 
   const currentLocPheValue = locPheAggregate([
@@ -419,7 +335,7 @@ export function ProbandModal({
   const handleSave = () => {
     const curatedAtMs = draft.curatedAtMs || Date.now()
     const curatedBy = draft.curatedBy || curationSourceLabel(criteriaDoc, null)
-    const clnTableAtSave = clnTableFor(modeOfInheritance, draft)
+    const clnTableAtSave = clnTableFor(modeOfInheritance, draft) ?? undefined
     const newId = isEditing
       ? editingProbandId!
       : `proband-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`

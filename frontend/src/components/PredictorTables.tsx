@@ -3,6 +3,7 @@ import { ChevronDown, ChevronUp, ExternalLink, Search } from "lucide-react"
 import { Badge } from "./ui/Badge"
 import { Table, THead, TBody, TR, TH, TD } from "./ui/Table"
 import { CLINGEN_PREDICTORS, OTHER_PREDICTORS } from "../lib/referenceData"
+import { misPredictorScore } from "../lib/scoring"
 
 // ---------------------------------------------------------------------------
 // Types
@@ -33,45 +34,6 @@ interface PredictorRow extends PredictorRef {
 }
 
 // ---------------------------------------------------------------------------
-// Scoring stub helpers
-// ---------------------------------------------------------------------------
-
-/** Predictor thresholds for SVCv4 point assignment. Stub until full engine. */
-interface PredictorThreshold {
-  pathogenic: number
-  benign: number
-  pathogenicPoints: number
-  benignPoints: number
-  invertComparison?: boolean
-}
-
-const MIS_PREDICTOR_THRESHOLDS: Record<string, PredictorThreshold> = {
-  REVEL: { pathogenic: 0.773, benign: 0.29, pathogenicPoints: 1.5, benignPoints: -1.5 },
-  AlphaMissense: { pathogenic: 0.564, benign: 0.34, pathogenicPoints: 1.0, benignPoints: -1.0 },
-  BayesDel: { pathogenic: 0.281, benign: -0.18, pathogenicPoints: 1.0, benignPoints: -1.0 },
-  ESM1b: { pathogenic: -7.5, benign: -7.5, pathogenicPoints: 1.0, benignPoints: -1.0, invertComparison: true },
-  MutPred2: { pathogenic: 0.737, benign: 0.391, pathogenicPoints: 1.0, benignPoints: -1.0 },
-  VARITY_R: { pathogenic: 0.747, benign: 0.3, pathogenicPoints: 1.0, benignPoints: -1.0 },
-  VEST4: { pathogenic: 0.861, benign: 0.45, pathogenicPoints: 1.0, benignPoints: -1.0 },
-}
-
-function misPredictorScore(tool: string, score: number | string | null): number | null {
-  if (score === null || score === undefined) return null
-  const n = typeof score === "string" ? parseFloat(score) : score
-  if (isNaN(n)) return null
-  const t = MIS_PREDICTOR_THRESHOLDS[tool]
-  if (!t) return null
-  if (t.invertComparison) {
-    if (n <= t.pathogenic) return t.pathogenicPoints
-    if (n > t.benign) return t.benignPoints
-  } else {
-    if (n >= t.pathogenic) return t.pathogenicPoints
-    if (n <= t.benign) return t.benignPoints
-  }
-  return 0
-}
-
-// ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
@@ -81,7 +43,7 @@ const MISSENSE_TOOL_NAMES = [
 ]
 const INDEL_TOOL_NAMES = ["Mutation Taster", "PROVEAN"]
 
-const SVC_METHOD_TOOLS = new Set(CLINGEN_PREDICTORS.map((p) => p.tool))
+const SVC_METHOD_TOOLS = new Set<string>(CLINGEN_PREDICTORS.map((p) => p.tool))
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -114,7 +76,7 @@ function withLiveData(
   const isManeSelect = !!liveBase && !!maneBase && liveBase === maneBase
   const fallback = allowManeFallback && maneTranscript
   const transcript = live.transcriptId || (fallback ? maneTranscript!.label : null)
-  const svcPoints = formatSvcPoints(misPredictorScore(predictor.tool, live.score))
+  const svcPoints = formatSvcPoints(live.score === null ? null : misPredictorScore(predictor.tool, String(live.score)))
   return {
     ...predictor,
     score: live.score,
