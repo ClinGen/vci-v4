@@ -8,4 +8,10 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  // Local dev only: forward /api to FastAPI (compose.yaml). In AWS, CloudFront routes /api instead.
+  server: {
+    proxy: {
+      '/api': 'http://localhost:8000',
+    },
+  },
 })
