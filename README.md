@@ -40,7 +40,7 @@ frontend/
   src/components/tabs/ One folder per curation section
 docs/
   data-model.md        Tables, conventions, and how they map to the SVCv4 model
-infra/terraform/       AWS infrastructure (in progress)
+infra/terraform/       AWS infrastructure; see docs/deploy.md
 scripts/               One-off tooling
 compose.yaml           Local Postgres and API
 justfile               Shortcuts for the commands below
@@ -79,7 +79,7 @@ npm install
 npm run dev     # http://localhost:5173
 ```
 
-The frontend doesn't call the API yet; coming soon.
+The dev server forwards `/api/*` to the API on port 8000, so frontend code calls relative paths like `/api/health`; in AWS, CloudFront does the same routing. The frontend doesn't call the API yet, and forms don't save yet; coming soon.
 
 ## Testing
 

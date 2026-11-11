@@ -22,6 +22,11 @@ terraform.tfstate*
 infra/.terraform/
 infra/terraform.tfstate*
 
+# Local-only values that shouldn't be shared
+*.tfvars
+backend.hcl
+*.tfplan
+
 # Local environment/secrets
 .env
 .env.*

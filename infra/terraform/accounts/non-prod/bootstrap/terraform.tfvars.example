@@ -1,0 +1,2 @@
+# Copy to terraform.tfvars (gitignored) and fill in the non-prod account ID.
+account_id = "000000000000"

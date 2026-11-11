@@ -1,0 +1,3 @@
+# Copy to backend.hcl (gitignored) after step 1 and fill in the bucket name that
+# step 1 prints. Every Terraform folder in the non-prod account reads it at `terraform init`.
+bucket = "vci-v4-terraform-state-000000000000-us-west-2"
