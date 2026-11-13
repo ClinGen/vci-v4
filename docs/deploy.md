@@ -6,18 +6,23 @@ The Terraform code lives in `infra/terraform`. Deploys to AWS by following the s
 
 ```
 infra/terraform/
-  modules/              Reusable building blocks (state bucket, network, stack)
-  accounts/<account>/   Things that exist once per AWS account (state bucket, vci-v4 VPC)
-  envs/<stack>/         One folder per stack (dev, curation-test, prod)
+  modules/                 Reusable building blocks, used by the folders below
+  accounts/<account>/      Things that exist once per AWS account
+    bootstrap/             The bucket that holds Terraform's state
+    network/               The vci-v4 VPC
+    shared/                Image registry, container cluster, Postgres server, load balancer
+  stacks/<account>/        Everything one stack needs (API, database, frontend)
 ```
 
 Each folder you run Terraform in has its own state, so working in one can never change another.
 
-Two files per account stay on your machine and are ignored by Git. Copy them from their `.example` versions:
+**A stack** is one deployed copy of the app, with its own API, database and frontend, for example `dev` or `test1`. All stacks in an account use the same `stacks/<account>/` code and share that account's network and `shared/` resources. Each stack is a [Terraform workspace](https://developer.hashicorp.com/terraform/cli/workspaces): a named, separate state for the same code. Deleting a stack removes only that stack's resources.
+
+Some files stay on your machine and are ignored by Git. Copy them from their `.example` versions:
 
 | File | Holds |
 |------|-------|
-| `accounts/<account>/bootstrap/terraform.tfvars` | The account ID. Terraform refuses to run against any other account |
+| `terraform.tfvars`, in each folder you run Terraform in | The account ID. Terraform refuses to run against any other account |
 | `accounts/<account>/backend.hcl` | The state bucket name, used by every folder in that account |
 
 ## Before you start
@@ -110,14 +115,69 @@ Creates the private S3 bucket where Terraform keeps state for everything in the 
 
 The bucket is protected from deletion (`prevent_destroy`), on purpose: it holds the record of everything Terraform manages in the account.
 
+## Step 2: Network
+
+Creates the `vci-v4` VPC that every stack in the account runs in: two public subnets for the API containers, two private subnets for the database and load balancer, and VPC flow logs. See [the folder's README](../infra/terraform/accounts/non-prod/network/README.md) for additional info.
+
+This folder stores its state in the bucket from step 1 from the start, so there's no state to move.
+
+1. **Go to the folder and set the account ID:**
+   ```bash
+   cd infra/terraform/accounts/non-prod/network
+   cp terraform.tfvars.example terraform.tfvars
+   ```
+   Edit `terraform.tfvars` and set `account_id`, the same value as in `../bootstrap/terraform.tfvars`.
+
+2. **Initialize:**
+   ```bash
+   AWS_PROFILE=non-prod terraform init -backend-config=../backend.hcl
+   ```
+   Expect `Successfully configured the backend "s3"!`, `Installed hashicorp/aws v6.69.1 (signed by HashiCorp)` and `Terraform has been successfully initialized!`
+
+3. **Preview:**
+   ```bash
+   AWS_PROFILE=non-prod terraform plan -out=network.tfplan
+   ```
+   Expect exactly **`Plan: 21 to add, 0 to change, 0 to destroy.`** The 21 resources are:
+   - the VPC `vci-v4`, its internet gateway, and its default security group. The default group already exists in every VPC; Terraform takes it over and removes its rules, which the plan shows as an add.
+   - 2 public subnets, their route table, the route to the internet gateway and 2 route table associations
+   - 2 private subnets, their route table and 2 route table associations
+   - the flow log, and its bucket `vci-v4-flow-logs-<account ID>-us-west-2` with ownership controls, public access block, encryption, lifecycle rule and bucket policy
+
+   **Stop if:**
+   - **anything says `change` or `destroy`**
+   - **you see `AWS account ID not allowed`:** the profile on the command points at a different account than `terraform.tfvars` names, or you left the profile off
+   - **you see `AccessDenied`:** your role or an organization policy doesn't allow this
+
+4. **Create the network:**
+   ```bash
+   AWS_PROFILE=non-prod terraform apply network.tfplan
+   ```
+   Expect `Apply complete! Resources: 21 added, 0 changed, 0 destroyed.` and outputs `vpc_id`, `public_subnet_ids`, `private_subnet_ids` and `flow_log_bucket`.
+
+5. **Confirm:**
+   ```bash
+   AWS_PROFILE=non-prod terraform plan
+   ```
+   Expect `No changes. Your infrastructure matches the configuration.` This also confirms AWS didn't change the flow log bucket's policy when the flow log was created.
+
+   In the AWS console (region us-west-2), **VPC → Your VPCs** shows `vci-v4` and its **Flow logs** tab shows one flow log with status `Active`. The bucket stays empty until something runs in the VPC (step 3 onward); flow logs only record traffic that happens.
+
+6. **Remove the saved plan:**
+   ```bash
+   rm network.tfplan
+   ```
+
+The VPC is protected from deletion (`prevent_destroy`), because every stack in the account depends on it.
+
 ## Next steps
 
-| Step | Builds |
-|------|--------|
-| 2 | The `vci-v4` VPC: public subnets for the API and load balancer, private subnets for the database |
-| 3 | Dev stack backend: ECR, RDS Postgres, ECS API, load balancer, security groups |
-| 4 | Dev stack frontend: S3 + CloudFront |
-| 5 | GitHub deploy role, CD workflow, CI infrastructure scan |
+| Step | Folder | Builds |
+|------|--------|--------|
+| 3 | `accounts/non-prod/shared` | Image registry, container cluster, Postgres server, internal load balancer, security groups |
+| 4 | `stacks/non-prod` | One stack's API service, database and frontend (S3 + CloudFront) |
+| 5 | `stacks/non-prod` | The first stack, `dev` |
+| 6 | | GitHub deploy role, CD workflow, CI infrastructure scan |
 
 ## Checks run before each step
 
