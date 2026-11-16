@@ -170,11 +170,73 @@ This folder stores its state in the bucket from step 1 from the start, so there'
 
 The VPC is protected from deletion (`prevent_destroy`), because every stack in the account depends on it.
 
+## Step 3: Shared resources
+
+Creates what every stack in the account uses: the image registry, the container cluster, the Postgres server, the internal load balancer, and the CloudFront connection to it. See [the folder's README](../infra/terraform/accounts/non-prod/shared/README.md) for more.
+
+Step 2 must be applied first: this folder looks up the `vci-v4` VPC by name. The apply takes about 20–30 minutes, mostly waiting for the database server and the CloudFront VPC origin.
+
+1. **Go to the folder and set the account ID:**
+   ```bash
+   cd infra/terraform/accounts/non-prod/shared
+   cp terraform.tfvars.example terraform.tfvars
+   ```
+   Edit `terraform.tfvars` and set `account_id`, the same value as in `../network/terraform.tfvars`.
+
+2. **Initialize:**
+   ```bash
+   AWS_PROFILE=non-prod terraform init -backend-config=../backend.hcl
+   ```
+   Expect `Successfully configured the backend "s3"!` and `Terraform has been successfully initialized!`
+
+3. **Preview:**
+   ```bash
+   AWS_PROFILE=non-prod terraform plan -out=shared.tfplan
+   ```
+   Expect exactly **`Plan: 21 to add, 0 to change, 0 to destroy.`** The 21 resources are:
+   - the image registry `vci-v4-api` and its cleanup rule
+   - the ECS cluster `vci-v4` and its capacity providers
+   - 3 security groups (`vci-v4-lb`, `vci-v4-api`, `vci-v4-db`) and their 6 rules
+   - the Postgres server `vci-v4`, its subnet group, parameter group and log group
+   - the load balancer `vci-v4` and its listener
+   - the CloudFront VPC origin `vci-v4` and the SSM parameter that holds its ID
+
+   **Stop if:**
+   - **anything says `change` or `destroy`**
+   - **you see `Expected private subnets in at least two availability zones`:** step 2 isn't applied, or was applied with a different name
+   - **you see `AWS account ID not allowed`:** the profile on the command points at a different account than `terraform.tfvars` names, or you left the profile off
+   - **you see `AccessDenied`:** your role or an organization policy doesn't allow this
+
+4. **Create the resources:**
+   ```bash
+   AWS_PROFILE=non-prod terraform apply shared.tfplan
+   ```
+   Expect `Apply complete! Resources: 21 added, 0 changed, 0 destroyed.` and outputs `ecr_repository_url`, `ecs_cluster_name`, `db_instance_identifier`, `db_admin_secret_arn`, `load_balancer_name` and `vpc_origin_parameter`.
+
+   If the apply stops partway with an error, nothing is lost: fix the cause, then run `plan -out=shared.tfplan` and `apply shared.tfplan` again. Terraform only creates what's still missing.
+
+5. **Confirm:**
+   ```bash
+   AWS_PROFILE=non-prod terraform plan
+   ```
+   Expect `No changes. Your infrastructure matches the configuration.`
+
+   In the AWS console (region us-west-2):
+   - **RDS → Databases** shows `vci-v4` with status `Available`
+   - **CloudFront → VPC origins** shows `vci-v4` with status `Deployed`
+   - **EC2 → Load Balancers** shows `vci-v4` as `Internal` and `Active`
+
+6. **Remove the saved plan:**
+   ```bash
+   rm shared.tfplan
+   ```
+
+The database server and load balancer are protected from deletion, because every stack in the account depends on them. While nothing uses them, the load balancer returns 404 to everything.
+
 ## Next steps
 
 | Step | Folder | Builds |
 |------|--------|--------|
-| 3 | `accounts/non-prod/shared` | Image registry, container cluster, Postgres server, internal load balancer, security groups |
 | 4 | `stacks/non-prod` | One stack's API service, database and frontend (S3 + CloudFront) |
 | 5 | `stacks/non-prod` | The first stack, `dev` |
 | 6 | | GitHub deploy role, CD workflow, CI infrastructure scan |

@@ -8,9 +8,11 @@ This folder describes VCI v4's AWS infrastructure as code. Terraform reads these
 modules/                 Reusable building blocks. You don't run Terraform here.
   state-bucket/          The S3 bucket that holds Terraform's state
   network/               A VPC with public and private subnets and flow logs
+  shared/                What every stack in an account uses: registry, cluster, database server, load balancer
 accounts/<account>/      Things that exist once per AWS account (non-prod, prod)
   bootstrap/             Creates that account's state bucket
   network/               Creates that account's vci-v4 VPC
+  shared/                Creates that account's shared resources
   backend.hcl.example    Template for the state bucket name
 ```
 
