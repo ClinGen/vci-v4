@@ -11,12 +11,9 @@ infra/terraform/
     bootstrap/             The bucket that holds Terraform's state
     network/               The vci-v4 VPC
     shared/                Image registry, container cluster, Postgres server, load balancer
-  stacks/<account>/        Everything one stack needs (API, database, frontend)
 ```
 
 Each folder you run Terraform in has its own state, so working in one can never change another.
-
-**A stack** is one deployed copy of the app, with its own API, database and frontend, for example `dev` or `test1`. All stacks in an account use the same `stacks/<account>/` code and share that account's network and `shared/` resources. Each stack is a [Terraform workspace](https://developer.hashicorp.com/terraform/cli/workspaces): a named, separate state for the same code. Deleting a stack removes only that stack's resources.
 
 Some files stay on your machine and are ignored by Git. Copy them from their `.example` versions:
 
@@ -161,7 +158,7 @@ This folder stores its state in the bucket from step 1 from the start, so there'
    ```
    Expect `No changes. Your infrastructure matches the configuration.` This also confirms AWS didn't change the flow log bucket's policy when the flow log was created.
 
-   In the AWS console (region us-west-2), **VPC → Your VPCs** shows `vci-v4` and its **Flow logs** tab shows one flow log with status `Active`. The bucket stays empty until something runs in the VPC (step 3 onward); flow logs only record traffic that happens.
+   In the AWS console (region us-west-2), **VPC → Your VPCs** shows `vci-v4` and its **Flow logs** tab shows one flow log with status `Active`. Flow logs only record traffic that happens, so the bucket stays empty until there's traffic in the VPC.
 
 6. **Remove the saved plan:**
    ```bash
